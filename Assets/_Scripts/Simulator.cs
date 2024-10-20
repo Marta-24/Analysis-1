@@ -91,6 +91,7 @@ public class Simulator : MonoBehaviour
     void AddNewSession(uint playerID)
     {
         DateTime dateTime = _currentDate;
+        Debug.Log($"Disparando OnNewSession: PlayerID={playerID}, DateTime={dateTime}");
         OnNewSession?.Invoke(dateTime, playerID);
     }
 
@@ -105,9 +106,15 @@ public class Simulator : MonoBehaviour
     {
         _currentDate = _currentDate.Add(GetSessionLength());
         if (UserBuys())
-            OnBuyItem?.Invoke(GetItem(),_currentDate, sessionId);
+        {
+            int item = GetItem();
+            Debug.Log($"Disparando OnBuyItem: ItemID={item}, SessionID={sessionId}, Date={_currentDate}");
+            OnBuyItem?.Invoke(item, _currentDate, sessionId);
+        }
         else
+        {
             EndSession(sessionId);
+        }
     }
 
     private bool UserBuys()
