@@ -1,24 +1,18 @@
 <?php
-include 'db_connect.php'; 
+include 'db_connect.php';
 
 $userId = $_POST["User_ID"];
 $startSession = $_POST["Start_Session"];
 
-// Añadir mensaje en los logs
-error_log("Recibido session data: User_ID={$userId}, Start_Session={$startSession}");
+error_log("Received session start data: User_ID={$userId}, Start_Session={$startSession}");
 
-$stmt = $conn->prepare("INSERT INTO `Sessions`(`UserID`, `StartSession`) VALUES (?, ?)");
-if ($stmt === false) {
-    error_log("Error en prepare(): " . $conn->error);
-    die("Error en prepare(): " . $conn->error);
-}
-
+$stmt = $conn->prepare("INSERT INTO `Sessions`(`userId`, `startSession`) VALUES (?, ?)");
 $stmt->bind_param("is", $userId, $startSession);
 
 if ($stmt->execute()) {
     echo $conn->insert_id;
 } else {
-    error_log("Error en execute(): " . $stmt->error);
+    error_log("Error in Session_Data.php: " . $stmt->error);
     echo "Error: " . $stmt->error;
 }
 

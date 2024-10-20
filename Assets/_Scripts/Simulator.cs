@@ -1,21 +1,22 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public class Simulator : MonoBehaviour
 {
 
-    public static Action<string,string,int,float,DateTime> OnNewPlayer; //Name, Country, age, gender and date
-    public static Action<DateTime,uint> OnNewSession;
-    public static Action<DateTime, uint> OnEndSession;
-    public static Action<int, DateTime, uint> OnBuyItem; //Item id and date
+    public static Action<string, string, DateTime> OnNewPlayer; //Name, Country and date
+    public static Action<DateTime> OnNewSession;
+    public static Action<DateTime> OnEndSession;
+    public static Action<int, DateTime> OnBuyItem; //Item id and date
 
     private DateTime _currentDate;
 
-    public int MaxPlayers=100;
-    public float ReplayChance => _currentDate.Month < 6 ? 0.7f: 0.95f;
+    public int MaxPlayers;
+    public float ReplayChance => _currentDate.Month < 6 ? 0.7f : 0.95f;
     public float BuyProbability = 0.1f;
 
 
@@ -55,9 +56,14 @@ public class Simulator : MonoBehaviour
             int rdm = Random.Range(0, coutryNames.Length);
             Countries.Add(((AllCountries)rdm).ToString());
         }
-        MakeOnePlayer();
-       
-     
+
+        for (int i = 0; i < MaxPlayers; i++)
+        {
+            MakeOnePlayer();
+        }
+
+
+
     }
 
     void MakeOnePlayer()
@@ -65,56 +71,49 @@ public class Simulator : MonoBehaviour
         _nPlayers++;
         if (_nPlayers > MaxPlayers)
         {
-            Debug.Log("Finished");
+            UnityEngine.Debug.Log("Finished");
             return;
         }
-            
+
 
         _currentDate = GetNewPlayerDate();
         AddNewPlayer(_currentDate);
+
     }
 
-    
-   
+
+
 
     void AddNewPlayer(DateTime dateTime)
     {
         string name = namegen.GetNextRandomName();
         int rdm = Random.Range(0, Countries.Count);
         string country = Countries[rdm];
-        float gender = Random.value;
-        int age = Random.Range(12, 99);
 
-        OnNewPlayer?.Invoke(name, country,age, gender, dateTime);
+
+        OnNewPlayer?.Invoke(name, country, dateTime);
     }
 
-    void AddNewSession(uint playerID)
+    void AddNewSession()
     {
         DateTime dateTime = _currentDate;
-        Debug.Log($"Disparando OnNewSession: PlayerID={playerID}, DateTime={dateTime}");
-        OnNewSession?.Invoke(dateTime, playerID);
+        OnNewSession?.Invoke(dateTime);
     }
 
-    void EndSession(uint sessionId)
+    void EndSession()
     {
         _currentDate = _currentDate.Add(GetSessionLength());
         DateTime dateTime = _currentDate;
-        OnEndSession?.Invoke(dateTime, sessionId);
+        OnEndSession?.Invoke(dateTime);
     }
 
-    void TryBuy(uint sessionId)
+    void TryBuy()
     {
         _currentDate = _currentDate.Add(GetSessionLength());
         if (UserBuys())
-        {
-            int item = GetItem();
-            Debug.Log($"Disparando OnBuyItem: ItemID={item}, SessionID={sessionId}, Date={_currentDate}");
-            OnBuyItem?.Invoke(item, _currentDate, sessionId);
-        }
+            OnBuyItem?.Invoke(GetItem(), _currentDate);
         else
-        {
-            EndSession(sessionId);
-        }
+            EndSession();
     }
 
     private bool UserBuys()
@@ -177,40 +176,40 @@ public class Simulator : MonoBehaviour
     #endregion
 
     #region callback subscribers
-    private void OnPlayerAdded(uint playerId)
+    private void OnPlayerAdded(uint obj)
     {
-        AddNewSession(playerId);
+        AddNewSession();
     }
-    private void OnNewSessionAdded(uint sessionId)
+    private void OnNewSessionAdded(uint obj)
     {
-        TryBuy(sessionId);
-    }
-
-    private void OnItemBought(uint sessionId)
-    {
-        EndSession(sessionId);
+        TryBuy();
     }
 
-    private void OnEndSessionAdded(uint playerId)
+    private void OnItemBought()
     {
-        
-        if(Random.value > ReplayChance)
+        EndSession();
+    }
+
+    private void OnEndSessionAdded(uint obj)
+    {
+
+        if (Random.value > ReplayChance)
         {
             MakeOnePlayer();
             return;
         }
         TimeSpan timeSpan = TimeTillNextSession();
-       
+
         _currentDate = _currentDate.Add(timeSpan);
-       // Debug.Log(_currentDate.ToLongDateString());
+        // Debug.Log(_currentDate.ToLongDateString());
 
         if (_currentDate.Year == 2022)
-            AddNewSession(playerId);
+            AddNewSession();
         else
             MakeOnePlayer();
     }
 
-   
+
     #endregion
 }
 
@@ -219,5 +218,5 @@ public class CallbackEvents
     public static Action<uint> OnEndSessionCallback;
     public static Action<uint> OnNewSessionCallback;
     public static Action<uint> OnAddPlayerCallback;
-    public static Action<uint> OnItemBuyCallback;
+    public static Action OnItemBuyCallback;
 }

@@ -1,31 +1,19 @@
 <?php
-include 'db_connect.php'; // Asegúrate de que este archivo conecta correctamente a la base de datos.
+include 'db_connect.php';
 
 $name = $_POST["Name"];
 $country = $_POST["Country"];
-$age = $_POST["Age"];
-$gender = $_POST["Gender"];
-$dateOfCreation = $_POST["DateOfCreation"];
+$date = $_POST["Date"];
 
-// Registrar en los logs los datos recibidos para verificación.
-error_log("Recibido user info: Name={$name}, Country={$country}, Age={$age}, Gender={$gender}, DateOfCreation={$dateOfCreation}");
+error_log("Received player data: Name={$name}, Country={$country}, Date={$date}");
 
-// Preparar la consulta para insertar los datos en usersInfo.
-$stmt = $conn->prepare("INSERT INTO `usersInfo`(`Name`, `Country`, `Age`, `Gender`, `DateOfCreation`) VALUES (?, ?, ?, ?, ?)");
-
-if ($stmt === false) {
-    // Si la preparación de la consulta falla, registrar el error.
-    error_log("Error en prepare(): " . $conn->error);
-    die("Error en prepare(): " . $conn->error);
-}
-
-// Vincular parámetros (s -> string, i -> integer, d -> double).
-$stmt->bind_param("ssids", $name, $country, $age, $gender, $dateOfCreation);
+$stmt = $conn->prepare("INSERT INTO `Players`(`Name`, `Country`, `Date`) VALUES (?, ?, ?)");
+$stmt->bind_param("sss", $name, $country, $date);
 
 if ($stmt->execute()) {
-    echo $conn->insert_id; // Devuelve el ID del nuevo usuario.
+    echo $conn->insert_id;
 } else {
-    error_log("Error en execute(): " . $stmt->error);
+    error_log("Error in Player_Data.php: " . $stmt->error);
     echo "Error: " . $stmt->error;
 }
 
