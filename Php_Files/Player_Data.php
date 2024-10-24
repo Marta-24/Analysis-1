@@ -11,7 +11,7 @@ $stmt = $conn->prepare("INSERT INTO `Players`(`Name`, `Country`, `Date`) VALUES 
 $stmt->bind_param("sss", $name, $country, $date);
 
 if ($stmt->execute()) {
-    echo $conn->insert_id;
+    echo $conn->insert_id; /// FIX THIIIIS - return json maybe??
 } else {
     error_log("Error in Player_Data.php: " . $stmt->error);
     echo "Error: " . $stmt->error;

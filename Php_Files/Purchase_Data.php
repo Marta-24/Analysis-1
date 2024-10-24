@@ -12,7 +12,7 @@ $stmt = $conn->prepare("INSERT INTO `Purchases`(`userId`, `sessionId`, `itemId`,
 $stmt->bind_param("iiis", $userId, $sessionId, $itemId, $buyDate);
 
 if ($stmt->execute()) {
-    echo $conn->insert_id;
+    echo $conn->insert_id; /// FIX THIIIIS - return json maybe??
 } else {
     error_log("Error in Purchase_Data.php: " . $stmt->error);
     echo "Error: " . $stmt->error;

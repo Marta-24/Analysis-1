@@ -10,7 +10,7 @@ $stmt = $conn->prepare("INSERT INTO `Sessions`(`userId`, `startSession`) VALUES 
 $stmt->bind_param("is", $userId, $startSession);
 
 if ($stmt->execute()) {
-    echo $conn->insert_id;
+    echo $conn->insert_id; /// FIX THIIIIS - return json maybe??
 } else {
     error_log("Error in Session_Data.php: " . $stmt->error);
     echo "Error: " . $stmt->error;
