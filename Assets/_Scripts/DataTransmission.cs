@@ -13,44 +13,51 @@ public class DataTransmission : MonoBehaviour
 
     private void OnEnable()
     {
-        Simulator.OnNewPlayer += (name, country, date) => StartCoroutine(UploadData(ActionType.NewPlayer, name, country, date.ToString("yyyy-MM-dd HH:mm:ss")));
-        Simulator.OnNewSession += (date) => StartCoroutine(UploadData(ActionType.StartSession, date: date.ToString("yyyy-MM-dd HH:mm:ss")));
-        Simulator.OnEndSession += (date) => StartCoroutine(UploadData(ActionType.EndSession, date: date.ToString("yyyy-MM-dd HH:mm:ss")));
-        Simulator.OnBuyItem += (item, date) => StartCoroutine(UploadData(ActionType.BuyItem, date: date.ToString("yyyy-MM-dd HH:mm:ss"), item: item));
+        Simulator.OnNewPlayer += (name, country, date) =>
+        {
+            WWWForm form = CreateForm(ActionType.NewPlayer, name, country, date.ToString("yyyy-MM-dd HH:mm:ss"));
+            StartCoroutine(UploadData(ActionType.NewPlayer, form, "https://citmalumnes.upc.es/albertcf5/Player_Data.php"));
+        };
+
+        Simulator.OnNewSession += (date) =>
+        {
+            WWWForm form = CreateForm(ActionType.StartSession, date: date.ToString("yyyy-MM-dd HH:mm:ss"));
+            StartCoroutine(UploadData(ActionType.StartSession, form, "https://citmalumnes.upc.es/albertcf5/Session_Data.php"));
+        };
+
+        Simulator.OnEndSession += (date) =>
+        {
+            WWWForm form = CreateForm(ActionType.EndSession, date: date.ToString("yyyy-MM-dd HH:mm:ss"));
+            StartCoroutine(UploadData(ActionType.EndSession, form, "https://citmalumnes.upc.es/albertcf5/Close_Session_Data.php"));
+        };
+
+        Simulator.OnBuyItem += (item, date) =>
+        {
+            WWWForm form = CreateForm(ActionType.BuyItem, date: date.ToString("yyyy-MM-dd HH:mm:ss"), item: item);
+            StartCoroutine(UploadData(ActionType.BuyItem, form, "https://citmalumnes.upc.es/albertcf5/Purchase_Data.php"));
+        };
     }
 
-    private void OnDisable()
-    {
-        Simulator.OnNewPlayer -= (name, country, date) => StartCoroutine(UploadData(ActionType.NewPlayer, name, country, date.ToString("yyyy-MM-dd HH:mm:ss")));
-        Simulator.OnNewSession -= (date) => StartCoroutine(UploadData(ActionType.StartSession, date: date.ToString("yyyy-MM-dd HH:mm:ss")));
-        Simulator.OnEndSession -= (date) => StartCoroutine(UploadData(ActionType.EndSession, date: date.ToString("yyyy-MM-dd HH:mm:ss")));
-        Simulator.OnBuyItem -= (item, date) => StartCoroutine(UploadData(ActionType.BuyItem, date: date.ToString("yyyy-MM-dd HH:mm:ss"), item: item));
-    }
-
-    IEnumerator UploadData(ActionType actionType, string name = null, string country = null, string date = null, int item = 0)
+    private WWWForm CreateForm(ActionType actionType, string name = null, string country = null, string date = null, int item = 0)
     {
         WWWForm form = new WWWForm();
-        string url = "";
         switch (actionType)
         {
             case ActionType.NewPlayer:
                 form.AddField("Name", name);
                 form.AddField("Country", country);
                 form.AddField("Date", date);
-                url = "https://citmalumnes.upc.es/~albertcf5/Player_Data.php";
                 break;
 
             case ActionType.StartSession:
                 form.AddField("User_ID", currentUserId.ToString());
                 form.AddField("Start_Session", date);
-                url = "https://citmalumnes.upc.es/~albertcf5/Session_Data.php";
                 break;
 
             case ActionType.EndSession:
                 form.AddField("User_ID", currentUserId.ToString());
                 form.AddField("End_Session", date);
                 form.AddField("Session_ID", currentSessionId.ToString());
-                url = "https://citmalumnes.upc.es/~albertcf5/Close_Session_Data.php";
                 break;
 
             case ActionType.BuyItem:
@@ -58,10 +65,13 @@ public class DataTransmission : MonoBehaviour
                 form.AddField("User_ID", currentUserId.ToString());
                 form.AddField("Session_ID", currentSessionId.ToString());
                 form.AddField("Buy_Date", date);
-                url = "https://citmalumnes.upc.es/~albertcf5/Purchase_Data.php";
                 break;
         }
+        return form;
+    }
 
+    private IEnumerator UploadData(ActionType actionType, WWWForm form, string url)
+    {
         using (UnityWebRequest www = UnityWebRequest.Post(url, form))
         {
             yield return www.SendWebRequest();
